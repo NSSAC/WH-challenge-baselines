@@ -49,7 +49,7 @@ def rand_walk_igraph(graph, start_node, size, restart_prob, wname="weight"):
     # To avoid a situation where we end up in a loop, we limit the number
     # of steps we can take without adding a new node
 
-    max_step = 100
+    max_step = 200
     step = 0
 
     while len(nodes) < size:
@@ -78,9 +78,7 @@ def rand_walk_igraph(graph, start_node, size, restart_prob, wname="weight"):
         else:
             step = 0
         if step == max_step:
-            print(f"rwr - too many steps for graph {start_node} {len(nodes)}") 
             return graph.induced_subgraph(list(nodes))
-    print(f"Finished node size {start_node} {len(nodes)}")
     return graph.induced_subgraph(list(nodes))
 if __name__ == "__main__":
 
@@ -102,11 +100,9 @@ if __name__ == "__main__":
     print(f"There are {len(vertex_names)} vertices")
 
     part_size = ceil(len(vertex_names)/args.n_jobs)
-    start = args.pid_partition*part_size
-    end = start + part_size
 
-    print(f"Doing partition from {start} to {end} ({vertex_names[start]} to {vertex_names[min(end-1, len(vertex_names)-1)]}")
     pid_part = vertex_names[args.pid_partition*part_size:(args.pid_partition+1)*part_size]
+    print(f"Partition size {len(pid_part)}")
     graph_dict = {}
     n_dict = 0
 
@@ -134,3 +130,9 @@ if __name__ == "__main__":
                 dump(filter_dict, outfile)
             graph_dict = {}
             n_dict += 1
+
+    filename = os.path.join(args.output, f"subgraph_{args.pid_partition}_{n_dict}.rwr_table")
+    if not os.path.exists(filename):
+        with open(filename, "wb") as outfile:
+            filter_dict = {pid : graph for pid,graph in graph_dict.items() if graph}
+            dump(filter_dict, outfile)
