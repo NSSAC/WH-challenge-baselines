@@ -111,7 +111,7 @@ def comp_node_buckets(subgraph, ego_pid, si_window, steps = [1,2,3,4]):
         
     return output
 
-def get_subgraph_inf_neighbor_data(subgraph, ego_pid, si_table, delta, cutoff):
+def get_subgraph_inf_neighbor_data(subgraph, ego_pid, si_table, delta, past_window, cutoff=None):
     
     # infected nodes in subgraph
     # infected neighbors
@@ -130,8 +130,10 @@ def get_subgraph_inf_neighbor_data(subgraph, ego_pid, si_table, delta, cutoff):
     neighbor_pid = [subgraph_pids[i] for i in neighbors]
     si_neighbors = si_subgraph[si_subgraph.index.get_level_values("pid").isin(neighbor_pid)]
     
-    valid_days = si_subgraph.index.get_level_values("infected")
-    valid_days = valid_days[valid_days <= cutoff].unique()
+    valid_days = si_subgraph.index.get_level_values("infected").unique()
+
+    if cutoff:
+        valid_days = valid_days[valid_days >= cutoff].unique()
     
     outputs = np.zeros((len(valid_days), 9))
     labels = np.zeros((outputs.shape[0],))
@@ -140,7 +142,6 @@ def get_subgraph_inf_neighbor_data(subgraph, ego_pid, si_table, delta, cutoff):
     
     for day in valid_days:
      
-        past_window = 3
         min_day = max(0, day - past_window)
         
         back_subgraph = si_subgraph[si_subgraph.index.get_level_values("infected").to_series().between(min_day, day).values]
@@ -162,13 +163,13 @@ def get_subgraph_inf_neighbor_data(subgraph, ego_pid, si_table, delta, cutoff):
         
     return outputs, labels
 
-def make_data(walk_table, disease, pop, cutoff, delta=7):
+def make_data(walk_table, disease, pop, past_window, cutoff, delta=7):
     """
     do age, number of infected neighbors
     """
     data = []
     for pid, subgraph in walk_table.items():
-        outputs, labels = get_subgraph_inf_neighbor_data(subgraph, pid, disease, delta, cutoff)
+        outputs, labels = get_subgraph_inf_neighbor_data(subgraph, pid, disease, delta, past_window, cutoff)
         if outputs is None:
             continue
         
@@ -197,9 +198,10 @@ if __name__ == "__main__":
     parser.add_argument("disease_file", help="disease data")
     parser.add_argument("pop_file", help="population characteristics file")
     parser.add_argument("out_file", help="output file for data")
-    parser.add_argument("--cutoff", default=None, type=int, help="Max date from which to consider data")
     parser.add_argument("--min-date", default=0, type=int, help="Min date to generate data from (used for making evaluation set)")
     parser.add_argument("--is-eval", action="store_true",default=False, help="exclude positive instances (assume input file is training)") 
+    parser.add_argument("--past-window", default=3, help="How much history to consider for each data point")
+
     args = parser.parse_args()
 
     pop = pd.read_csv(args.pop_file)
@@ -210,25 +212,16 @@ if __name__ == "__main__":
 
     data = []
 
-    disease = si_table[si_table.index.get_level_values("infected") >= args.min_date]
+    disease = si_table[si_table.index.get_level_values("infected") >= (args.min_date - args.past_window)]
 
     print(f"There are {len(files)} files to process")
     checkpoint = 100
 
-    if not args.cutoff:
-        cutoff = disease.index.get_level_values("infected").max()
-    else:
-        cutoff = args.cutoff
-
     for i,filename in enumerate(files):
-    
     
         with open(filename, "rb") as f:
             walk_table = load(f)
-        file_data = make_data(walk_table, disease, pop, cutoff) # no cutoff for training
-        # GSH: note changing test cutoff to generate data for evaluation
-        # this breaks train/test split here but easiest way to get data
-        # to test evaluation 
+        file_data = make_data(walk_table, disease, pop, args.past_window, args.min_date)
         if args.is_eval and len(file_data) > 0:
             data.append(file_data[file_data["s_t+d"] != 1.0])
         else:

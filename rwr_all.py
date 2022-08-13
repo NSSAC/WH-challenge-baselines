@@ -53,7 +53,7 @@ def rand_walk_igraph(graph, start_node, size, restart_prob, wname="weight"):
     step = 0
 
     while len(nodes) < size:
-        curr_size = len(nodes)
+        curr_size = len(nodes) # TODO: preprocess pid_part to ensure degree > 0 => avoid max_step iterations
         if random() < restart_prob or len(graph.neighbors(current)) == 0:
             current = start_node
         else:
@@ -64,8 +64,9 @@ def rand_walk_igraph(graph, start_node, size, restart_prob, wname="weight"):
             if poss_weights.sum() == 0:
                 print(f"Edge weights are 0 for {current}")
                 current = start_node
+                # TODO: make into exception
             else:
-                poss_weights = np.nan_to_num(poss_weights)
+                #poss_weights = np.nan_to_num(poss_weights)
                 new_edge = np.random.choice(poss_edges, p = poss_weights/poss_weights.sum())
 
                 if graph.es[new_edge].source == current:
