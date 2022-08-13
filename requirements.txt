@@ -1,0 +1,10 @@
+pandas
+igraph
+numpy
+deepwalk
+sklearn
+torch
+tensorflow
+tensorboard_logger
+imblearn
+gensim==3.8.3
