@@ -58,6 +58,8 @@ predictions `sample_data/gnn/test_eval.csv`
 
 The code for the graph neural network architecture is used from  
 
+Jiezhong Qiu et al., “DeepInf: Social Influence Prediction with Deep Learning,” in Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining, 2018, 2110–19, https://doi.org/10.1145/3219819.3220077.
+
 # Parallelization of Data Preparation
 
 To run these models on larger datasets, it may be desirable to parallelize certain
