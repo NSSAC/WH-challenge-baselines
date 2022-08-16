@@ -30,10 +30,10 @@ The other files in the `sample_data` directory are csv files `pop.csv`,
 training and evaluation files containing only the persons present in the 
 `graph.pkl` subgraph.
 
-The directory `random_walks` contains example data produced by the `rwr_all.sh`
+The directory `random_walks` contains example data produced by the `DeepInf/rwr_all.sh`
 bash script. These are random walks on `graph.pkl` produced by `rwr_all.py`. 
-These random walks are used by both the Logistic Regression as well as the 
-GNN. 
+
+The directories `sample_data/gnn` and `sample_data/logistic_regression`
 
 ## Logistic Regression
 
@@ -48,8 +48,9 @@ evaluation of the data.
 ## GNN (DeepInf)
 
 The GNN data generation can be done by going into the `DeepInf` directory, and
-executing the `make_data.sh` bash script. This generates the training and evaluation
-data for the Graph Neural Network based example implementation in `sample_data/gnn/train/`
+executing the `rwr_all.sh` bash script followed by the `make_data.sh` script. 
+This generates the training and evaluation data for the Graph Neural Network 
+based example implementation in `sample_data/gnn/train/`
 and `sample_data/gnn/eval`
 
 To train and evaluate the model, executing the `train_gnn.sh` bash script.
@@ -67,7 +68,7 @@ aspects of the data preparation. Much of the data preparation is embarrasingly
 parallel. While the specifics of how this is parallelized depends on the platform,
 we have written the data preparation scripts to suggest one possible approach.
 
-The scripts `rwr_all.sh`, `logistic_regression/logistic_regression.sh`, and 
-`DeepInf/make_data.sh` all contain for-loops over `N_PART` iterations.
-The contents of these for-loops may be executed in parallel, and the number of jobs
-may be increased arbitrarily. 
+The scripts `DeepInf/rwr_all.sh`, `DeepInf/make_data.sh', and 
+`logistic_regression/logistic_regression.sh`, and all contain for-loops over 
+`N_PART` iterations. The contents of these for-loops may be executed in parallel, 
+and the number of jobs may be increased arbitrarily. 
