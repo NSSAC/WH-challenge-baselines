@@ -11,12 +11,15 @@ training and evaluation are contained in separate files
 """
 
 import os
+from math import ceil
 from argparse import ArgumentParser
 from glob import glob
 from pickle import load
 
 import pandas as pd
 import numpy as np
+
+from igraph import Graph
 
 def get_subgraph_inf_weight(si_limit, subgraph, pid, steps):
     """
@@ -111,13 +114,7 @@ def comp_node_buckets(subgraph, ego_pid, si_window, steps = [1,2,3,4]):
         
     return output
 
-def get_subgraph_inf_neighbor_data(subgraph, ego_pid, si_table, delta, past_window, cutoff=None):
-    
-    # infected nodes in subgraph
-    # infected neighbors
-    # coreness of ego_pid
-    # 
-    # label
+def get_subgraph_inf_neighbor_data(subgraph, ego_pid, si_table, delta, cutoff, past_window):
     
     subgraph_pids = subgraph.vs["name"]
     si_subgraph = si_table[si_table.index.get_level_values("pid").isin(subgraph_pids)]
@@ -127,15 +124,13 @@ def get_subgraph_inf_neighbor_data(subgraph, ego_pid, si_table, delta, past_wind
     
     ego_vid = subgraph.vs.find(name=ego_pid)
     neighbors = subgraph.neighbors(ego_vid)
-    neighbor_pid = [subgraph_pids[i] for i in neighbors]
-    si_neighbors = si_subgraph[si_subgraph.index.get_level_values("pid").isin(neighbor_pid)]
-    
+    #neighbor_pid = [subgraph_pids[i] for i in neighbors]
+    #si_neighbors = si_subgraph[si_subgraph.index.get_level_values("pid").isin(neighbor_pid)]
     valid_days = si_subgraph.index.get_level_values("infected").unique()
-
-    if cutoff:
+    if cutoff: 
         valid_days = valid_days[valid_days >= cutoff].unique()
     
-    outputs = np.zeros((len(valid_days), 9))
+    outputs = np.zeros((len(valid_days), 6))
     labels = np.zeros((outputs.shape[0],))
     
     i = 0
@@ -145,62 +140,63 @@ def get_subgraph_inf_neighbor_data(subgraph, ego_pid, si_table, delta, past_wind
         min_day = max(0, day - past_window)
         
         back_subgraph = si_subgraph[si_subgraph.index.get_level_values("infected").to_series().between(min_day, day).values]
-        back_neighbors = si_neighbors[si_neighbors.index.get_level_values("infected").to_series().between(min_day, day).values]
-        
+        #back_neighbors = si_neighbors[si_neighbors.index.get_level_values("infected").to_series().between(min_day, day).values]
+        past_inf = si_subgraph[(si_subgraph.index.get_level_values("pid") == ego_pid) & \
+                               (si_subgraph.index.get_level_values("infected") <= day)]
+
         subgraph_t = len(back_subgraph.index.get_level_values("pid").unique())
-        neighbor_t = len(back_neighbors.index.get_level_values("pid").unique())
+        #neighbor_t = len(back_neighbors.index.get_level_values("pid").unique())
         
         state_t_d = si_subgraph[si_subgraph.index.get_level_values("infected").to_series().between(day, day+delta, inclusive="right").values]
         
         outputs[i, 0] = subgraph_t
-        outputs[i, 1] = neighbor_t
-        outputs[i, 2:6] = comp_node_buckets(subgraph, ego_pid, back_subgraph, [1,2,3,4])
+        #outputs[i, 1] = neighbor_t
+        outputs[i, 1:3] = comp_node_buckets(subgraph, ego_pid, back_subgraph, [1,2])
+        outputs[i, 3] = len(past_inf) > 0
         labels[i] = ego_pid in state_t_d.index.get_level_values("pid")
         
-        for j,step in enumerate([1,2,3]):
-            outputs[i,6+j]  = get_subgraph_inf_weight(back_subgraph, subgraph, ego_pid, step)
+        for j,step in enumerate([1,2]):
+            outputs[i,4+j]  = get_subgraph_inf_weight(back_subgraph, subgraph, ego_pid, step)
         i += 1
         
     return outputs, labels
 
-def make_data(walk_table, disease, pop, past_window, cutoff, delta=7):
+def make_data(pid, graph, disease, pop, past_window, cutoff, delta=7):
     """
     do age, number of infected neighbors
     """
-    data = []
-    for pid, subgraph in walk_table.items():
-        outputs, labels = get_subgraph_inf_neighbor_data(subgraph, pid, disease, delta, past_window, cutoff)
-        if outputs is None:
-            continue
-        
-        out_df = pd.DataFrame({"subgraph_inf_t" : outputs[:,0],
-                               "neighbor_inf_t" : outputs[:,1],
-                               "inf_1" : outputs[:,2],
-                               "inf_2" : outputs[:,3],
-                               "inf_3" : outputs[:,4],
-                               "inf_4" : outputs[:,5],
-                               "inf_weight_1" : outputs[:,6],
-                               "inf_weight_2" : outputs[:,7],
-                               "inf_weight_3" : outputs[:,8],
-                               "s_t+d" : labels, 
-                               "age" : pop.loc[pid, "age"], 
-                               "pid" : pid})
+    vid = graph.vs.find(name=pid)
+    neighbors = graph.neighborhood(vid, order=2)
+    subgraph = graph.induced_subgraph(neighbors+[vid])
+
+    outputs, labels = get_subgraph_inf_neighbor_data(subgraph, pid, disease, delta, cutoff, past_window)
+    if outputs is None:
+            return pd.DataFrame({})
+    out_df = pd.DataFrame({"subgraph_inf_t" : outputs[:,0],
+                           "inf_1" : outputs[:,1],
+                           "inf_2" : outputs[:,2],
+                           "was_inf" : outputs[:,3],
+                           "inf_weight_1" : outputs[:,4],
+                           "inf_weight_2" : outputs[:,5],
+                           "s_t+d" : labels, 
+                           "age" : pop.loc[pid, "age"], 
+                           "pid" : pid})
             
-        data.append(out_df)
-    if data == []:
-        return pd.DataFrame()
-    return pd.concat(data)
+    return out_df
 
 if __name__ == "__main__":
 
     parser = ArgumentParser()
-    parser.add_argument("dir_name", help="directory with random walks to target")
+    #parser.add_argument("dir_name", help="directory with random walks to target")
+    parser.add_argument("graph_file", help="pickled graph object")
     parser.add_argument("disease_file", help="disease data")
     parser.add_argument("pop_file", help="population characteristics file")
     parser.add_argument("out_file", help="output file for data")
     parser.add_argument("--min-date", default=0, type=int, help="Min date to generate data from (used for making evaluation set)")
     parser.add_argument("--is-eval", action="store_true",default=False, help="exclude positive instances (assume input file is training)") 
     parser.add_argument("--past-window", default=3, help="How much history to consider for each data point")
+    parser.add_argument("--pid_partition", type=int, help="index of pids partition")
+    parser.add_argument("--n_jobs", type=int, help="total number of jobs")
 
     args = parser.parse_args()
 
@@ -208,26 +204,27 @@ if __name__ == "__main__":
     disease_data = pd.read_csv(args.disease_file)
     si_table = make_si_table(disease_data)
     pop.set_index("pid", inplace=True)
-    files = glob(os.path.join(args.dir_name, "subgraph_*.rwr_table"))
 
+    graph = Graph.Read_Pickle(args.graph_file)
     data = []
 
     disease = si_table[si_table.index.get_level_values("infected") >= (args.min_date - args.past_window)]
+    vertex_names = list(graph.vs["name"])
+    vertex_names.sort()
 
-    print(f"There are {len(files)} files to process")
-    checkpoint = 100
+    part_size = ceil(len(vertex_names)/args.n_jobs)
+    pid_part = vertex_names[args.pid_partition*part_size:(args.pid_partition+1)*part_size]
 
-    for i,filename in enumerate(files):
-    
-        with open(filename, "rb") as f:
-            walk_table = load(f)
-        file_data = make_data(walk_table, disease, pop, args.past_window, args.min_date)
-        if args.is_eval and len(file_data) > 0:
-            data.append(file_data[file_data["s_t+d"] != 1.0])
+    print(f"Processing {args.pid_partition} partition of len {len(pid_part)}")
+
+    for pid in pid_part:
+
+        pid_data = make_data(pid, graph, disease, pop, args.past_window, args.min_date)
+
+        if args.is_eval and len(pid_data) > 0:
+            data.append(pid_data[pid_data["s_t+d"] != 1.0])
         else:
-            data.append(file_data)
-        if (i+1) % checkpoint == 0:
-            print(f"{i+1} files processed, data {len(data)}")
+            data.append(pid_data)
 
     train = pd.concat(data)
     train.to_csv(args.out_file)
