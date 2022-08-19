@@ -21,6 +21,8 @@ import numpy as np
 
 from igraph import Graph
 
+from make_graph import make_graph
+
 def get_subgraph_inf_weight(si_limit, subgraph, pid, steps):
     """
     Get the "infection weight" or the discounted weight of
@@ -172,7 +174,7 @@ def make_data(pid, graph, disease, pop, past_window, cutoff, delta=7):
     outputs, labels = get_subgraph_inf_neighbor_data(subgraph, pid, disease, delta, cutoff, past_window)
     if outputs is None:
             return pd.DataFrame({})
-    out_df = pd.DataFrame({"subgraph_inf_t" : outputs[:,0],
+    out_df = pd.DataFrame({
                            "inf_1" : outputs[:,1],
                            "inf_2" : outputs[:,2],
                            "was_inf" : outputs[:,3],
@@ -188,7 +190,7 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
     #parser.add_argument("dir_name", help="directory with random walks to target")
-    parser.add_argument("graph_file", help="pickled graph object")
+    parser.add_argument("graph_file", help="edges csv object")
     parser.add_argument("disease_file", help="disease data")
     parser.add_argument("pop_file", help="population characteristics file")
     parser.add_argument("out_file", help="output file for data")
@@ -205,7 +207,7 @@ if __name__ == "__main__":
     si_table = make_si_table(disease_data)
     pop.set_index("pid", inplace=True)
 
-    graph = Graph.Read_Pickle(args.graph_file)
+    graph = make_graph(args.graph_file)
     data = []
 
     disease = si_table[si_table.index.get_level_values("infected") >= (args.min_date - args.past_window)]
@@ -227,4 +229,4 @@ if __name__ == "__main__":
             data.append(pid_data)
 
     train = pd.concat(data)
-    train.to_csv(args.out_file)
+    train.to_csv(args.out_file, index=False)

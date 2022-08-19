@@ -2,7 +2,7 @@
 
 DISEASE=../sample_data/training.csv
 POP=../sample_data/pop.csv
-GRAPH=../sample_data/graph.pkl
+GRAPH=../sample_data/contacts.csv
 
 N_JOBS=4
 
