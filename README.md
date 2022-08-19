@@ -21,9 +21,9 @@ neural network using GPUs.
 # Sample Data
 
 Examples of data files used in this implementation may be found in the 
-`sample_data` directory. This contains a smaller graph object, `graph.pkl`,
-representing a subset of the edges from the VA graph. This object is a 
-pickled igraph graph. 
+`sample_data` directory. This contains a smaller contact file, `contacts.csv`,
+representing a subset of the edges from the VA graph. This object is a csv 
+containing a list of edges.
 
 The other files in the `sample_data` directory are csv files `pop.csv`,
 `training.csv` and `target.csv`. These files are subsets of the population, 
