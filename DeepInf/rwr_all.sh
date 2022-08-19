@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 RWR_DIR=../sample_data/random_walks/
-GRAPH=../sample_data/graph.pkl
+GRAPH=../sample_data/contacts.csv
 N_JOBS=4
 
 for (( PART=0; PART<$N_JOBS; PART++ ))

@@ -30,6 +30,8 @@ from random import random
 import numpy as np
 from igraph import Graph
 
+from make_graph import make_graph
+
 def rand_walk_igraph(graph, start_node, size, restart_prob, wname="weight"):
     """
     Do an edge-weighted random walk with restart starting from start_node
@@ -85,7 +87,7 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
 
-    parser.add_argument("graph_file", help="pickled igraph graph")
+    parser.add_argument("graph_file", help="csv file with graph edges")
     parser.add_argument("--pid_partition", type=int, help="index of pids partition")
     parser.add_argument("--n_jobs", type=int, help="total number of jobs")
     parser.add_argument("--output", help="output directory")
@@ -94,7 +96,7 @@ if __name__ == "__main__":
     parser.add_argument("--restart-prob", type=float, default=0.8, help="restart probability")
     args = parser.parse_args()
 
-    graph = Graph.Read_Pickle(args.graph_file)
+    graph = make_graph(args.graph_file)
     vertex_names = list(graph.vs["name"])
     vertex_names.sort()
 
