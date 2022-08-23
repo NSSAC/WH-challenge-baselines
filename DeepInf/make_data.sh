@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-DISEASE=../sample_data/training.csv
-POP=../sample_data/pop.csv
+DISEASE=../sample_data/va_disease_outcome_training.csv
+POP=../sample_data/va_person.csv
 N_JOBS=4
 
 for (( PART=0; PART<N_JOBS; PART++ ))

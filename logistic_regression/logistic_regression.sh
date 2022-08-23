@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-DISEASE=../sample_data/training.csv
-POP=../sample_data/pop.csv
-GRAPH=../sample_data/contacts.csv
+DISEASE=../sample_data/va_disease_outcome_training.csv
+POP=../sample_data/va_person.csv
+GRAPH=../sample_data/va_population_network.csv
 
 N_JOBS=4
 
@@ -15,4 +15,4 @@ do
     python make_logistic_data.py $GRAPH $DISEASE $POP ../sample_data/logistic_regression/eval/eval_$PART.csv --min-date 50 --is-eval --pid_partition $PART --n_jobs $N_JOBS
 done
 python logistic_regression.py --training_dir ../sample_data/logistic_regression/train/ --eval_dir ../sample_data/logistic_regression/eval/ \
-    --pop $POP --eval-labels ../sample_data/target.csv
+    --pop $POP --eval-labels ../sample_data/va_disease_outcome_target.csv
