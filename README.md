@@ -13,15 +13,15 @@ requires running these example implementations on significantly larger portions 
 
 ### Metrics
 
-The following AUPRC scores are calculated using the development datasets available from the PETs Prize Challenges.
+The following AUPRC scores use the development datasets available from the PETs Prize Challenges.
 
 | Dataset  | Logistic Regression | Graph Neural Network |
 | :---     |    :----:           |         :---:        |
 | Virginia | 0.045<sup>*</sup>   | 0.008                |
 | UK       | 0.098<sup>**</sup>  | 0.053<sup>**</sup>   |
 
-<sup>*</sup> This metric for Virginia was calculated using 50% of the population \
-<sup>**</sup> These metrics for UK were calculated using 5% of the population
+<sup>*</sup> This metric is the result for Virginia when running the model using 50% of the population \
+<sup>**</sup> These metrics are the results for UK when running the models using 5% of the population
 
 ## Requirements 
 
