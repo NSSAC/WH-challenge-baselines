@@ -1,7 +1,7 @@
 # Introduction
 
 This repository contains example implementations for centralized models for the
-Public Health use case for the US/UK PETS challenge. It contains code to generate
+Pandemic Response and Forecasting use case for the [US/UK PETS Prize Challenge](https://petsprizechallenges.com/). It contains code to generate
 features from the synthetic data provided for competitors, as well as implementations
 of example baselines. It additionally contains sample from the US network and
 disease states to demonstrate data formatting expectations.
