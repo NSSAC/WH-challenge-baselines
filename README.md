@@ -1,16 +1,27 @@
 # Introduction
 
 This repository contains example implementations for centralized models for the
-Public Health use case for the US/UK PETS challenge. It contains code to generate
+Pandemic Response and Forecasting use case for the [US/UK PETS Prize Challenges](https://petsprizechallenges.com/). It contains code to generate
 features from the synthetic data provided for competitors, as well as implementations
 of example baselines. It additionally contains sample from the US network and
 disease states to demonstrate data formatting expectations.
 
 Note that the example data is just meant to demonstrate data formatting expectations
-for these example implementations. Model performance for models trained just ont
-this data will be quite poor. Replication of the performance metrics described
-in the technical report requires running these example implementations on 
-significantly larger portions of the data.
+for these example implementations. Model performance for models trained just on
+this data will be quite poor. Replication of the following performance metrics 
+requires running these example implementations on significantly larger portions of the data.
+
+### Metrics
+
+The following AUPRC scores use the development datasets available from the PETs Prize Challenges.
+
+| Dataset  | Logistic Regression | Graph Neural Network |
+| :---     |    :----:           |         :---:        |
+| Virginia | 0.045<sup>*</sup>   | 0.008                |
+| UK       | 0.098<sup>**</sup>  | 0.053<sup>**</sup>   |
+
+<sup>*</sup> This metric is the result for Virginia when running the model using 50% of the population \
+<sup>**</sup> These metrics are the results for UK when running the models using 5% of the population
 
 ## Requirements 
 
